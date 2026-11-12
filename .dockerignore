@@ -1,0 +1,14 @@
+.git
+.gitignore
+.tools
+.env
+secrets
+bin
+*.log
+*.pem
+*.key
+*.crt
+report.txt
+collect-security.sh
+prototype
+

@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: epay
+      POSTGRES_USER: epay
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - epay-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U epay -d epay"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    security_opt:
+      - no-new-privileges:true
+
+  gateway:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      LISTEN_ADDRESS: ":8080"
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL in .env}
+      DATABASE_URL: postgres://epay:${POSTGRES_PASSWORD}@postgres:5432/epay?sslmode=disable
+      EPAY_PID: ${EPAY_PID:?set EPAY_PID in .env}
+      EPAY_KEY: ${EPAY_KEY:?set EPAY_KEY in .env}
+      NEW_API_ALLOWED_ORIGINS: ${NEW_API_ALLOWED_ORIGINS:?set NEW_API_ALLOWED_ORIGINS in .env}
+      MAX_ORDER_CENTS: ${MAX_ORDER_CENTS:-10000000}
+      ORDER_TTL: ${ORDER_TTL:-30m}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ALIPAY_APP_ID: ${ALIPAY_APP_ID:?set ALIPAY_APP_ID in .env}
+      ALIPAY_PRIVATE_KEY_FILE: ${ALIPAY_PRIVATE_KEY_FILE:-/run/secrets/alipay/app_private_key.pem}
+      ALIPAY_APP_PUBLIC_CERT_FILE: ${ALIPAY_APP_PUBLIC_CERT_FILE:-/run/secrets/alipay/appCertPublicKey.crt}
+      ALIPAY_ROOT_CERT_FILE: ${ALIPAY_ROOT_CERT_FILE:-/run/secrets/alipay/alipayRootCert.crt}
+      ALIPAY_PUBLIC_CERT_FILE: ${ALIPAY_PUBLIC_CERT_FILE:-/run/secrets/alipay/alipayCertPublicKey_RSA2.crt}
+      ALIPAY_PRODUCTION: "true"
+      WECHAT_APP_ID: ${WECHAT_APP_ID:?set WECHAT_APP_ID in .env}
+      WECHAT_MERCHANT_ID: ${WECHAT_MERCHANT_ID:?set WECHAT_MERCHANT_ID in .env}
+      WECHAT_SERIAL_NUMBER: ${WECHAT_SERIAL_NUMBER:?set WECHAT_SERIAL_NUMBER in .env}
+      WECHAT_API_V3_KEY: ${WECHAT_API_V3_KEY:?set WECHAT_API_V3_KEY in .env}
+      WECHAT_PRIVATE_KEY_FILE: ${WECHAT_PRIVATE_KEY_FILE:-/run/secrets/wechat/apiclient_key.pem}
+      WECHAT_PUBLIC_KEY_FILE: ${WECHAT_PUBLIC_KEY_FILE:-/run/secrets/wechat/wechatpay_public_key.pem}
+      WECHAT_PUBLIC_KEY_ID: ${WECHAT_PUBLIC_KEY_ID:?set WECHAT_PUBLIC_KEY_ID in .env}
+    volumes:
+      - ${SECRETS_HOST_DIR:-./secrets}:/run/secrets:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8080/readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  epay-postgres:
+
