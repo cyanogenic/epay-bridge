@@ -24,6 +24,19 @@ out of scope for version one.
 See [docs/configuration.md](docs/configuration.md) for configuration and
 [docs/protocol.md](docs/protocol.md) for the EPay compatibility contract.
 
+## Container package
+
+GitHub Actions builds and publishes the container image to GitHub Container
+Registry after every push to `main` and every version tag matching `v*`:
+
+```sh
+docker pull ghcr.io/cyanogenic/epay-bridge:latest
+```
+
+Pushes to `main` publish `main`, `latest`, and `sha-*` tags. A tag such as
+`v1.2.3` publishes `1.2.3` and `1.2` tags. Pull requests build the image without
+publishing it.
+
 ## Tests
 
 Unit tests do not require external services:
