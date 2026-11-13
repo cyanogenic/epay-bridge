@@ -17,7 +17,8 @@ services:
       - no-new-privileges:true
 
   gateway:
-    build: .
+    image: ghcr.io/cyanogenic/epay-bridge:latest
+    pull_policy: always
     restart: unless-stopped
     depends_on:
       postgres:

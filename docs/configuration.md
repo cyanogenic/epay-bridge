@@ -85,11 +85,20 @@ the signed `notify_url` and `return_url` supplied with each order.
 
 ## 5. Start and verify
 
+Production uses the public `ghcr.io/cyanogenic/epay-bridge:latest` image:
+
 ```sh
 docker compose config
-docker compose up -d --build
+docker compose pull
+docker compose up -d --wait
 docker compose ps
 curl -fsS https://pay.example.com/readyz
+```
+
+For local source builds, add the development override:
+
+```sh
+docker compose -f compose.yaml -f compose.build.yaml up -d --build --wait
 ```
 
 Use provider production accounts and a CNY 0.01 test order first. For each
