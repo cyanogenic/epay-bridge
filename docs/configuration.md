@@ -4,6 +4,9 @@
 
 Never commit provider keys or certificates. Create this local layout; the
 entire `secrets/` directory is ignored by Git and the Docker build context.
+Each provider is optional, but at least one must be enabled. Setting
+`ALIPAY_APP_ID` enables Alipay, while setting `WECHAT_MERCHANT_ID` enables
+WeChat Pay. Once enabled, all credentials for that provider are required.
 
 ```text
 secrets/
@@ -47,7 +50,7 @@ legitimately reachable through multiple hostnames.
 
 Terminate HTTPS at the existing reverse proxy and forward the payment hostname
 to `127.0.0.1:8080`. Preserve the original request method, body, and headers.
-Provider callbacks are:
+Enabled provider callbacks are:
 
 - `https://pay.example.com/callbacks/alipay`
 - `https://pay.example.com/callbacks/wechat`
@@ -66,7 +69,8 @@ PID:         value of EPAY_PID
 KEY:         value of EPAY_KEY
 ```
 
-Use these payment methods:
+Configure only the payment methods whose providers are enabled. For both
+providers, use:
 
 ```json
 [
@@ -88,8 +92,8 @@ docker compose ps
 curl -fsS https://pay.example.com/readyz
 ```
 
-Use provider production accounts and a CNY 0.01 test order first. Verify all of
-the following before enabling normal amounts:
+Use provider production accounts and a CNY 0.01 test order first. For each
+enabled provider, verify the applicable steps before enabling normal amounts:
 
 1. Alipay returns to New API and its asynchronous callback is accepted.
 2. The WeChat QR code renders and its API v3 callback is accepted.

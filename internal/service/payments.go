@@ -41,6 +41,11 @@ func NewPayments(cfg config.Config, store *store.Store, providers ...provider.Pr
 	}
 }
 
+func (p *Payments) Supports(channel string) bool {
+	_, ok := p.providers[channel]
+	return ok
+}
+
 func (p *Payments) Create(ctx context.Context, req *epay.PurchaseRequest) (*domain.Order, provider.CheckoutKind, error) {
 	selected, ok := p.providers[req.Type]
 	if !ok {

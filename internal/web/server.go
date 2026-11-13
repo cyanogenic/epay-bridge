@@ -81,6 +81,11 @@ func (s *Server) submit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid payment request", http.StatusBadRequest)
 		return
 	}
+	if !s.payments.Supports(req.Type) {
+		slog.Warn("rejected unavailable payment method", "remote", r.RemoteAddr, "channel", req.Type)
+		http.Error(w, "payment method unavailable", http.StatusBadRequest)
+		return
+	}
 	order, kind, err := s.payments.Create(r.Context(), req)
 	if err != nil {
 		slog.Error("create payment", "merchant_order_no", req.MerchantOrderNo, "channel", req.Type, "error", err)
@@ -99,6 +104,10 @@ func (s *Server) submit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) alipayNotify(w http.ResponseWriter, r *http.Request) {
+	if !s.payments.Supports("alipay") {
+		http.NotFound(w, r)
+		return
+	}
 	r.Body = http.MaxBytesReader(w, r.Body, 256<<10)
 	if _, err := s.payments.ProcessNotify(r.Context(), "alipay", r); err != nil {
 		slog.Warn("Alipay callback rejected", "remote", r.RemoteAddr, "error", err)
@@ -110,6 +119,10 @@ func (s *Server) alipayNotify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) wechatNotify(w http.ResponseWriter, r *http.Request) {
+	if !s.payments.Supports("wxpay") {
+		http.NotFound(w, r)
+		return
+	}
 	r.Body = http.MaxBytesReader(w, r.Body, 256<<10)
 	if _, err := s.payments.ProcessNotify(r.Context(), "wxpay", r); err != nil {
 		slog.Warn("WeChat callback rejected", "remote", r.RemoteAddr, "error", err)
@@ -120,6 +133,10 @@ func (s *Server) wechatNotify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) alipayReturn(w http.ResponseWriter, r *http.Request) {
+	if !s.payments.Supports("alipay") {
+		http.NotFound(w, r)
+		return
+	}
 	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "invalid return", http.StatusBadRequest)

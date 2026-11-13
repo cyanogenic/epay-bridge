@@ -26,6 +26,7 @@ type Config struct {
 }
 
 type Alipay struct {
+	Enabled           bool
 	AppID             string
 	PrivateKeyFile    string
 	AppPublicCertFile string
@@ -36,6 +37,7 @@ type Alipay struct {
 }
 
 type WeChat struct {
+	Enabled        bool
 	AppID          string
 	MerchantID     string
 	SerialNumber   string
@@ -103,6 +105,8 @@ func Load() (Config, error) {
 	if cfg.AdminPassword != "" && len(cfg.AdminPassword) < 16 {
 		return Config{}, errors.New("ADMIN_PASSWORD must contain at least 16 characters")
 	}
+	cfg.Alipay.Enabled = cfg.Alipay.AppID != ""
+	cfg.WeChat.Enabled = cfg.WeChat.MerchantID != ""
 	if err := cfg.validateProviders(); err != nil {
 		return Config{}, err
 	}
@@ -110,19 +114,26 @@ func Load() (Config, error) {
 }
 
 func (c Config) validateProviders() error {
-	if c.Alipay.AppID == "" || c.Alipay.PrivateKeyFile == "" {
-		return errors.New("Alipay is required: ALIPAY_APP_ID and ALIPAY_PRIVATE_KEY_FILE must be set")
+	if !c.Alipay.Enabled && !c.WeChat.Enabled {
+		return errors.New("at least one payment provider must be configured: set ALIPAY_APP_ID or WECHAT_MERCHANT_ID")
 	}
-	certMode := c.Alipay.AppPublicCertFile != "" && c.Alipay.RootCertFile != "" && c.Alipay.PublicCertFile != ""
-	publicKeyMode := c.Alipay.PublicKeyFile != ""
-	if !certMode && !publicKeyMode {
-		return errors.New("Alipay requires either all three certificate files or ALIPAY_PUBLIC_KEY_FILE")
+	if c.Alipay.Enabled {
+		if c.Alipay.PrivateKeyFile == "" {
+			return errors.New("Alipay is enabled: ALIPAY_PRIVATE_KEY_FILE must be set")
+		}
+		certMode := c.Alipay.AppPublicCertFile != "" && c.Alipay.RootCertFile != "" && c.Alipay.PublicCertFile != ""
+		publicKeyMode := c.Alipay.PublicKeyFile != ""
+		if !certMode && !publicKeyMode {
+			return errors.New("Alipay is enabled: either all three certificate files or ALIPAY_PUBLIC_KEY_FILE must be set")
+		}
 	}
-	if c.WeChat.AppID == "" || c.WeChat.MerchantID == "" || c.WeChat.SerialNumber == "" || c.WeChat.APIv3Key == "" || c.WeChat.PrivateKeyFile == "" || c.WeChat.PublicKeyFile == "" || c.WeChat.PublicKeyID == "" {
-		return errors.New("WeChat Native is required: app ID, merchant ID, serial number, API v3 key, private key, payment public key and public key ID must be set")
-	}
-	if len(c.WeChat.APIv3Key) != 32 {
-		return errors.New("WECHAT_API_V3_KEY must be exactly 32 characters")
+	if c.WeChat.Enabled {
+		if c.WeChat.AppID == "" || c.WeChat.SerialNumber == "" || c.WeChat.APIv3Key == "" || c.WeChat.PrivateKeyFile == "" || c.WeChat.PublicKeyFile == "" || c.WeChat.PublicKeyID == "" {
+			return errors.New("WeChat Native is enabled: app ID, serial number, API v3 key, private key, payment public key and public key ID must be set")
+		}
+		if len(c.WeChat.APIv3Key) != 32 {
+			return errors.New("WECHAT_API_V3_KEY must be exactly 32 characters")
+		}
 	}
 	return nil
 }

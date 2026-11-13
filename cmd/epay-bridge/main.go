@@ -34,18 +34,29 @@ func main() {
 	}
 	defer database.Close()
 
-	alipayProvider, err := provider.NewAlipay(cfg.Alipay, cfg.PublicBaseURL)
-	if err != nil {
-		slog.Error("initialize Alipay", "error", err)
-		os.Exit(1)
+	paymentProviders := make([]provider.Provider, 0, 2)
+	enabledProviders := make([]string, 0, 2)
+	if cfg.Alipay.Enabled {
+		alipayProvider, err := provider.NewAlipay(cfg.Alipay, cfg.PublicBaseURL)
+		if err != nil {
+			slog.Error("initialize Alipay", "error", err)
+			os.Exit(1)
+		}
+		paymentProviders = append(paymentProviders, alipayProvider)
+		enabledProviders = append(enabledProviders, alipayProvider.Name())
 	}
-	wechatProvider, err := provider.NewWeChat(cfg.WeChat, cfg.PublicBaseURL)
-	if err != nil {
-		slog.Error("initialize WeChat Pay", "error", err)
-		os.Exit(1)
+	if cfg.WeChat.Enabled {
+		wechatProvider, err := provider.NewWeChat(cfg.WeChat, cfg.PublicBaseURL)
+		if err != nil {
+			slog.Error("initialize WeChat Pay", "error", err)
+			os.Exit(1)
+		}
+		paymentProviders = append(paymentProviders, wechatProvider)
+		enabledProviders = append(enabledProviders, wechatProvider.Name())
 	}
+	slog.Info("payment providers enabled", "providers", enabledProviders)
 
-	payments := service.NewPayments(cfg, database, alipayProvider, wechatProvider)
+	payments := service.NewPayments(cfg, database, paymentProviders...)
 	handler, err := web.NewServer(cfg, database, payments)
 	if err != nil {
 		slog.Error("initialize HTTP server", "error", err)

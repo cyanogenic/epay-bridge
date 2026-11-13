@@ -35,19 +35,19 @@ services:
       ORDER_TTL: ${ORDER_TTL:-30m}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
-      ALIPAY_APP_ID: ${ALIPAY_APP_ID:?set ALIPAY_APP_ID in .env}
+      ALIPAY_APP_ID: ${ALIPAY_APP_ID:-}
       ALIPAY_PRIVATE_KEY_FILE: ${ALIPAY_PRIVATE_KEY_FILE:-/run/secrets/alipay/app_private_key.pem}
       ALIPAY_APP_PUBLIC_CERT_FILE: ${ALIPAY_APP_PUBLIC_CERT_FILE:-/run/secrets/alipay/appCertPublicKey.crt}
       ALIPAY_ROOT_CERT_FILE: ${ALIPAY_ROOT_CERT_FILE:-/run/secrets/alipay/alipayRootCert.crt}
       ALIPAY_PUBLIC_CERT_FILE: ${ALIPAY_PUBLIC_CERT_FILE:-/run/secrets/alipay/alipayCertPublicKey_RSA2.crt}
       ALIPAY_PRODUCTION: "true"
-      WECHAT_APP_ID: ${WECHAT_APP_ID:?set WECHAT_APP_ID in .env}
-      WECHAT_MERCHANT_ID: ${WECHAT_MERCHANT_ID:?set WECHAT_MERCHANT_ID in .env}
-      WECHAT_SERIAL_NUMBER: ${WECHAT_SERIAL_NUMBER:?set WECHAT_SERIAL_NUMBER in .env}
-      WECHAT_API_V3_KEY: ${WECHAT_API_V3_KEY:?set WECHAT_API_V3_KEY in .env}
+      WECHAT_APP_ID: ${WECHAT_APP_ID:-}
+      WECHAT_MERCHANT_ID: ${WECHAT_MERCHANT_ID:-}
+      WECHAT_SERIAL_NUMBER: ${WECHAT_SERIAL_NUMBER:-}
+      WECHAT_API_V3_KEY: ${WECHAT_API_V3_KEY:-}
       WECHAT_PRIVATE_KEY_FILE: ${WECHAT_PRIVATE_KEY_FILE:-/run/secrets/wechat/apiclient_key.pem}
       WECHAT_PUBLIC_KEY_FILE: ${WECHAT_PUBLIC_KEY_FILE:-/run/secrets/wechat/wechatpay_public_key.pem}
-      WECHAT_PUBLIC_KEY_ID: ${WECHAT_PUBLIC_KEY_ID:?set WECHAT_PUBLIC_KEY_ID in .env}
+      WECHAT_PUBLIC_KEY_ID: ${WECHAT_PUBLIC_KEY_ID:-}
     volumes:
       - ${SECRETS_HOST_DIR:-./secrets}:/run/secrets:ro
     read_only: true
